@@ -5,9 +5,6 @@ import json
 from datetime import datetime, timedelta
 import base64
 from io import BytesIO
-import folium
-from streamlit_folium import st_folium
-import plotly.express as px
 import pandas as pd
 
 # 페이지 설정
@@ -274,21 +271,42 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown("### 🗺️ 여행지 지도")
     if st.button("지도 보기"):
-        # 간단한 지도 생성 (서울 중심)
-        m = folium.Map(location=[37.5665, 126.9780], zoom_start=10)
-        folium.Marker([37.5665, 126.9780], popup="서울").add_to(m)
-        st_folium(m, height=300, width=400)
+        # Google Maps 링크로 대체
+        st.markdown("""
+        <div class="info-card">
+            <h4>🗺️ 추천 여행지 지도</h4>
+            <p><a href="https://maps.google.com" target="_blank">🌍 Google Maps에서 보기</a></p>
+            <p><a href="https://map.naver.com" target="_blank">🇰🇷 네이버 지도에서 보기</a></p>
+            <p><strong>인기 여행지:</strong></p>
+            <ul>
+                <li>🏖️ 제주도 - 한국의 하와이</li>
+                <li>🏛️ 경주 - 천년의 역사</li>
+                <li>🌊 부산 - 바다와 도시의 조화</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
 with col2:
     st.markdown("### 📊 여행 통계")
     if st.button("통계 보기"):
-        # 가상의 여행 데이터로 차트 생성
-        travel_data = pd.DataFrame({
-            '월': ['6월', '7월', '8월', '9월'],
-            '여행객수': [1200, 1800, 2200, 1400]
-        })
-        fig = px.line(travel_data, x='월', y='여행객수', title='월별 여행객 현황')
-        st.plotly_chart(fig, use_container_width=True)
+        # 간단한 데이터 테이블과 메트릭으로 대체
+        st.markdown("**📈 2024년 인기 여행지 순위**")
+        
+        travel_stats = {
+            "순위": ["1위", "2위", "3위", "4위", "5위"],
+            "여행지": ["제주도", "부산", "강릉", "여수", "경주"],
+            "방문객수": ["2,400만", "1,800만", "1,200만", "950만", "800만"]
+        }
+        
+        df = pd.DataFrame(travel_stats)
+        st.dataframe(df, use_container_width=True)
+        
+        # 추가 통계 정보
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.metric("올해 국내 여행객", "5,200만명", "12%")
+        with col_b:
+            st.metric("평균 여행 예산", "180만원", "8%")
 
 with col3:
     st.markdown("### 💾 여행 계획 관리")
