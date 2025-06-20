@@ -73,27 +73,20 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
+    
+    /* 메인 컨테이너 간격 조정 */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# 메인 헤더 - 더 세련된 디자인
+# 메인 헤더
 st.markdown("""
 <div class="main-header">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
-        <div style="font-size: 4rem;">🏖️</div>
-        <div>
-            <h1 style="margin: 0; font-size: 3rem; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
-                AI 여행 플래너
-            </h1>
-            <p style="margin: 0; font-size: 1.2rem; opacity: 0.9; font-weight: 300;">
-                Smart Travel Planning Assistant
-            </p>
-        </div>
-        <div style="font-size: 4rem;">✈️</div>
-    </div>
-    <p style="font-size: 1.1rem; margin: 0; opacity: 0.95;">
-        🌊 완벽한 여름 휴가를 계획해보세요! 🌞
-    </p>
+    <h1>🏖️ AI 여행 플래너</h1>
+    <p>🌊 완벽한 여름 휴가를 계획해보세요! 🌞</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -146,133 +139,57 @@ with st.sidebar:
             converted = amount * rates[currency]
             st.info(f"{amount} {currency} = {converted:,.0f} 원")
 
-# 메인 콘텐츠 영역 - 레이아웃 개선
-if not openai_api_key:
-    # API Key가 없을 때 가운데 영역 채우기
-    st.markdown("## 🌟 여행 플래너 소개")
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("""
-        <div class="info-card" style="text-align: center; padding: 3rem;">
-            <h2 style="color: #00c6ff; margin-bottom: 2rem;">🎯 AI 여행 플래너의 특별한 기능</h2>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
-                <div style="padding: 1.5rem; background: linear-gradient(45deg, #FF6B6B, #4ECDC4); border-radius: 15px; color: white;">
-                    <h3>🤖 맞춤형 AI 추천</h3>
-                    <p>당신의 취향과 예산에 맞는 완벽한 여행 계획</p>
-                </div>
-                <div style="padding: 1.5rem; background: linear-gradient(45deg, #4ECDC4, #44A08D); border-radius: 15px; color: white;">
-                    <h3>💰 실시간 환율</h3>
-                    <p>여행 예산 계획을 위한 정확한 환율 정보</p>
-                </div>
-                <div style="padding: 1.5rem; background: linear-gradient(45deg, #667eea, #764ba2); border-radius: 15px; color: white;">
-                    <h3>🌤️ 날씨 & 팁</h3>
-                    <p>여행지 날씨와 현지 꿀팁 정보 제공</p>
-                </div>
-                <div style="padding: 1.5rem; background: linear-gradient(45deg, #f093fb, #f5576c); border-radius: 15px; color: white;">
-                    <h3>📱 원클릭 계획</h3>
-                    <p>빠른 질문으로 즉시 여행 계획 시작</p>
-                </div>
-            </div>
-            
-            <div style="margin-top: 3rem; padding: 2rem; background: rgba(0,198,255,0.1); border-radius: 15px;">
-                <h3 style="color: #0072ff;">🔑 시작하기</h3>
-                <p style="font-size: 1.1rem; line-height: 1.6;">
-                    왼쪽 사이드바에서 <strong>OpenAI API Key</strong>를 입력하시면<br>
-                    즉시 AI 여행 상담을 시작할 수 있습니다!
-                </p>
-                <p style="margin-top: 1rem; opacity: 0.8;">
-                    💡 API Key가 없으시다면 <a href="https://platform.openai.com" target="_blank" style="color: #0072ff;">OpenAI 홈페이지</a>에서 발급받으세요
-                </p>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # 하단에 샘플 대화 예시 추가
-    st.markdown("## 💬 대화 예시")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        <div class="info-card">
-            <h4>🏖️ 휴양지 추천 문의</h4>
-            <div style="background: #f0f8ff; padding: 15px; border-radius: 10px; margin: 10px 0;">
-                <strong>사용자:</strong> "가족과 함께 갈 수 있는 조용한 해변 휴양지 추천해줘"
-            </div>
-            <div style="background: #f0fff0; padding: 15px; border-radius: 10px;">
-                <strong>AI:</strong> "🏖️ 가족 여행에 완벽한 휴양지를 추천해드릴게요!<br><br>
-                📍 <strong>제주도 함덕해수욕장</strong><br>
-                - 얕고 맑은 바다로 아이들에게 안전<br>
-                - 주변 카페와 음식점 다양..."
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="info-card">
-            <h4>💰 예산 계획 상담</h4>
-            <div style="background: #f0f8ff; padding: 15px; border-radius: 10px; margin: 10px 0;">
-                <strong>사용자:</strong> "일본 3박4일 여행 예산이 얼마나 들까?"
-            </div>
-            <div style="background: #f0fff0; padding: 15px; border-radius: 10px;">
-                <strong>AI:</strong> "💰 일본 3박4일 예산을 계산해드릴게요!<br><br>
-                ✈️ <strong>항공료:</strong> 30-50만원<br>
-                🏨 <strong>숙박비:</strong> 20-40만원<br>
-                🍜 <strong>식비:</strong> 15-25만원..."
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+# 메인 콘텐츠 영역 - 간격 조정
+col1, col2 = st.columns([3, 2])  # 비율을 3:2로 조정해서 빈 공간 줄임
 
-else:
-    # API Key가 있을 때는 기존 레이아웃
-    col1, col2 = st.columns([2, 1])
+with col1:
+    # 빠른 질문 버튼들
+    st.markdown("## 🚀 빠른 질문")
+    
+    quick_questions = [
+        "🏖️ 여름 휴가지 추천해줘",
+        "✈️ 항공료 절약 팁 알려줘",
+        "🏨 숙소 예약 꿀팁이 뭐야?",
+        "🍽️ 현지 맛집 추천해줘",
+        "📱 여행 필수 앱 알려줘",
+        "💼 짐 싸기 체크리스트 만들어줘"
+    ]
+    
+    # 버튼을 2x3 그리드로 배치 (더 컴팩트하게)
+    cols = st.columns(2)
+    for i, question in enumerate(quick_questions):
+        with cols[i % 2]:
+            if st.button(question, key=f"quick_{i}"):
+                st.session_state.quick_question = question
 
-    with col1:
-        # 빠른 질문 버튼들
-        st.markdown("## 🚀 빠른 질문")
-        
-        quick_questions = [
-            "🏖️ 여름 휴가지 추천해줘",
-            "✈️ 항공료 절약 팁 알려줘",
-            "🏨 숙소 예약 꿀팁이 뭐야?",
-            "🍽️ 현지 맛집 추천해줘",
-            "📱 여행 필수 앱 알려줘",
-            "💼 짐 싸기 체크리스트 만들어줘"
-        ]
-        
-        # 버튼을 3x2 그리드로 배치
-        cols = st.columns(3)
-        for i, question in enumerate(quick_questions):
-            with cols[i % 3]:
-                if st.button(question, key=f"quick_{i}"):
-                    st.session_state.quick_question = question
-
-    with col2:
-        # 여행 진행 상황 표시
-        st.markdown("## 📊 여행 계획 진행도")
-        
-        # 가상의 진행도 데이터
-        progress_data = {
-            "단계": ["목적지 선택", "항공권 예약", "숙소 예약", "액티비티 계획", "짐 준비"],
-            "완료율": [100, 80, 60, 30, 0]
-        }
-        
-        for step, progress in zip(progress_data["단계"], progress_data["완료율"]):
-            st.metric(step, f"{progress}%")
-            st.progress(progress / 100)
-        
-        # 날씨 정보 (예시)
-        st.markdown("## 🌤️ 날씨 정보")
-        st.markdown("""
-        <div class="info-card">
-            <h4>서울 날씨</h4>
-            <p>🌡️ 28°C (맑음)</p>
-            <p>💧 습도: 65%</p>
-            <p>💨 바람: 남동풍 2m/s</p>
-        </div>
-        """, unsafe_allow_html=True)
+with col2:
+    # 여행 진행 상황 표시 - 더 컴팩트하게
+    st.markdown("## 📊 여행 계획 진행도")
+    
+    # 가상의 진행도 데이터
+    progress_data = {
+        "단계": ["목적지 선택", "항공권 예약", "숙소 예약", "액티비티 계획", "짐 준비"],
+        "완료율": [100, 80, 60, 30, 0]
+    }
+    
+    for step, progress in zip(progress_data["단계"], progress_data["완료율"]):
+        col_a, col_b = st.columns([2, 1])
+        with col_a:
+            st.write(f"**{step}**")
+        with col_b:
+            st.write(f"{progress}%")
+        st.progress(progress / 100)
+    
+    # 날씨 정보 (예시)
+    st.markdown("## 🌤️ 날씨 정보")
+    st.markdown("""
+    <div class="info-card">
+        <h4>서울 날씨</h4>
+        <p>🌡️ 28°C (맑음)</p>
+        <p>💧 습도: 65%</p>
+        <p>💨 바람: 남동풍 2m/s</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # OpenAI API Key 확인
 if not openai_api_key:
@@ -355,7 +272,7 @@ else:
         
         st.session_state.messages.append({"role": "assistant", "content": response})
 
-# 하단 기능들
+# 하단 기능들 - 더 컴팩트하게
 st.markdown("---")
 
 # 3개 컬럼으로 추가 기능 배치
