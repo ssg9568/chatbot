@@ -207,8 +207,6 @@ else:
     # 세션 상태 초기화
     if "messages" not in st.session_state:
         st.session_state.messages = []
-    if "show_chat_history" not in st.session_state:
-        st.session_state.show_chat_history = False
     
     # 시스템 프롬프트를 실시간으로 업데이트
     def get_system_prompt():
@@ -268,9 +266,6 @@ else:
     st.markdown("---")
     
     if prompt:
-        # 대화 내역 표시 활성화
-        st.session_state.show_chat_history = True
-        
         # 시스템 메시지 업데이트
         current_system = get_system_prompt()
         
@@ -330,15 +325,13 @@ else:
         
         st.session_state.messages.append({"role": "assistant", "content": response})
     
-    # 대화 내역을 입력창 활성화 시에만 표시
-    if st.session_state.show_chat_history:
-        st.markdown("### 📜 대화 내역")
-        
-        # 이전 메시지 표시 (시스템 메시지 제외)
-        display_messages = [msg for msg in st.session_state.messages if msg["role"] != "system"]
-        for message in display_messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+    st.markdown("### 📜 대화 내역")
+    
+    # 이전 메시지 표시 (시스템 메시지 제외)
+    display_messages = [msg for msg in st.session_state.messages if msg["role"] != "system"]
+    for message in display_messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
 # 메인 콘텐츠 영역 - 간격 조정
 col1, col2 = st.columns([3, 2])
@@ -364,12 +357,12 @@ with col1:
     """, unsafe_allow_html=True)
 
 with col2:
-    # 여행 팁 카드
+    # 여행 팁 카드를 확장하여 빈 공간 채우기
     st.markdown("## 💡 여행 꿀팁")
     st.markdown(f"""
     <div class="info-card">
         <h4>🎯 {travel_type} 여행 팁</h4>
-        <p><strong>여행 준비를 위한 실용적인 쪼개</strong></p>
+        <p><strong>여행 준비를 위한 실용적인 조언</strong></p>
         <ul>
             <li>💰 <strong>예산 관리:</strong> 총 예산의 70%만 미리 계획하고, 나머지는 현지에서 유연하게 사용</li>
             <li>📱 <strong>필수 앱:</strong> 네비게이션(Google Maps, 네이버 지도), 번역기, 교통 앱, 예약 플랫폼</li>
