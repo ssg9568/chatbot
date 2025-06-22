@@ -104,6 +104,20 @@ st.markdown("""
         margin-bottom: 1rem;
         border: 2px solid #ff6b6b;
     }
+    
+    /* 사용자 입력창 스타일링 */
+    .stChatInput {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 25px;
+        padding: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border: 2px solid #00c6ff;
+        font-size: 1.2rem;
+    }
+    
+    .stChatInput input {
+        font-size: 1.2rem !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -225,7 +239,7 @@ else:
             """
         }
     
-    # 빠른 질문 버튼들을 상단으로 이동
+    # 빠른 질문 버튼들
     st.markdown("## 🚀 빠른 질문")
     
     quick_questions = [
@@ -246,41 +260,11 @@ else:
     
     st.markdown("---")
     
-    # 🔥 사용자 입력창을 상단으로 이동 🔥
+    # 사용자 입력창을 빠른 질문 아래로 이동 및 스타일링
     st.markdown("## 💬 여행 상담")
     st.markdown("### 💭 질문하기")
-    # 사용자 입력 (질문하기 섹션 아래 배치)
     prompt = st.chat_input("여행에 대해 무엇이든 물어보세요! 현재 설정이 자동으로 적용됩니다 🗣️")
     
-    if prompt:
-        # 시스템 메시지 업데이트
-        current_system = get_system_prompt()
-        
-        # 기존 메시지가 있으면 시스템 메시지 업데이트, 없으면 추가
-        if st.session_state.messages and st.session_state.messages[0]["role"] == "system":
-            st.session_state.messages[0] = current_system
-        else:
-            st.session_state.messages.insert(0, current_system)
-        
-        # 사용자 메시지 저장 및 표시
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        
-        # AI 응답 생성
-        with st.chat_message("assistant"):
-            with st.spinner("설정을 반영하여 답변을 생성하고 있습니다..."):
-                stream = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=st.session_state.messages,
-                    stream=True,
-                    temperature=0.7
-                )
-                response = st.write_stream(stream)
-        
-        st.session_state.messages.append({"role": "assistant", "content": response})
-    
-    # 사용자 입력 처리
     if prompt:
         # 시스템 메시지 업데이트
         current_system = get_system_prompt()
@@ -373,40 +357,19 @@ with col1:
     """, unsafe_allow_html=True)
 
 with col2:
-    # 실시간 날씨 정보
-    st.markdown("## 🌤️ 실시간 날씨")
-    
-    # 주요 여행지 선택
-    weather_location = st.selectbox(
-        "지역 선택:",
-        ["Seoul", "Busan", "Jeju", "Gangneung", "Yeosu"],
-        format_func=lambda x: {"Seoul": "서울", "Busan": "부산", "Jeju": "제주", "Gangneung": "강릉", "Yeosu": "여수"}[x]
-    )
-    
-    # 실시간 날씨 정보 가져오기
-    weather = get_weather_info(weather_location)
-    location_name = {"Seoul": "서울", "Busan": "부산", "Jeju": "제주", "Gangneung": "강릉", "Yeosu": "여수"}[weather_location]
-    
-    st.markdown(f"""
-    <div class="info-card">
-        <h4>{location_name} 현재 날씨</h4>
-        <p>🌡️ {weather['temp']}°C ({weather['condition']})</p>
-        <p>💧 습도: {weather['humidity']}%</p>
-        <p>💨 바람: {weather['wind']}</p>
-        <p><small>📍 여행 계획 시 참고하세요!</small></p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # 여행 팁 카드 추가
+    # 여행 팁 카드를 확장하여 빈 공간 채우기
     st.markdown("## 💡 여행 꿀팁")
     st.markdown(f"""
     <div class="info-card">
         <h4>🎯 {travel_type} 여행 팁</h4>
+        <p><strong>여행 준비를 위한 실용적인 조언</strong></p>
         <ul>
-            <li>💰 예산 관리: 총 예산의 70%만 미리 계획</li>
-            <li>📱 필수 앱: 지도, 번역, 날씨, 교통</li>
-            <li>🎒 짐 싸기: {duration}일 기준 캐리어 선택</li>
-            <li>📷 추억 남기기: 클라우드 백업 필수</li>
+            <li>💰 <strong>예산 관리:</strong> 총 예산의 70%만 미리 계획하고, 나머지는 현지에서 유연하게 사용</li>
+            <li>📱 <strong>필수 앱:</strong> 네비게이션(Google Maps, 네이버 지도), 번역기, 교통 앱, 예약 플랫폼</li>
+            <li>🎒 <strong>짐 싸기:</strong> {duration}일 여행 기준, {companions}명 모두 가벼운 캐리어 선택</li>
+            <li>📷 <strong>추억 남기기:</strong> 사진 클라우드 백업(Google Photos, iCloud) 필수</li>
+            <li>🛂 <strong>여행 서류:</strong> 여권, 신분증, 예약 확인서 사본 준비</li>
+            <li>🧳 <strong>현지 준비:</strong> {travel_type}에 맞는 활동별 장비 및 복장 확인</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
