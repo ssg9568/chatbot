@@ -79,15 +79,6 @@ st.markdown("""
         padding-top: 2rem;
         padding-bottom: 2rem;
     }
-    
-    /* 사용자 설정 정보 카드 */
-    .user-settings {
-        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
-        padding: 1rem;
-        border-radius: 15px;
-        margin-bottom: 1rem;
-        border: 2px solid #ff6b6b;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -135,20 +126,6 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 현재 설정 요약 표시
-    st.markdown("## 📋 현재 설정")
-    st.markdown(f"""
-    <div class="user-settings">
-        <h4>🎯 {travel_type}</h4>
-        <p>💰 예산: {budget}만원/인</p>
-        <p>📅 기간: {duration}일</p>
-        <p>👥 인원: {companions}명</p>
-        <p>💸 총 예산: <strong>{budget * companions}만원</strong></p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
     # 환율 계산기
     st.markdown("## 💱 환율 계산기")
     currency = st.selectbox("통화:", ["USD", "JPY", "EUR", "CNY", "THB", "VND"])
@@ -162,163 +139,28 @@ with st.sidebar:
             converted = amount * rates[currency]
             st.info(f"{amount} {currency} = {converted:,.0f} 원")
 
-# OpenAI API Key 확인
-if not openai_api_key:
-    st.info("🔑 사이드바에서 OpenAI API Key를 입력해주세요.")
-else:
-    # OpenAI 클라이언트 생성
-    client = OpenAI(api_key=openai_api_key)
-    
-    # 세션 상태 초기화
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    
-    # 시스템 프롬프트를 실시간으로 업데이트
-    def get_system_prompt():
-        return {
-            "role": "system",
-            "content": f"""
-            너는 전문적이고 친근한 여행 플래너 AI 어시스턴트야. 
-            
-            ⚠️ 중요: 사용자의 모든 질문에 아래 설정을 자동으로 고려해서 답변해야 해:
-            
-            🎯 현재 사용자 설정:
-            - 여행 스타일: {travel_type}
-            - 예산: {budget}만원 (1인 기준) / 총 예산: {budget * companions}만원
-            - 여행 기간: {duration}일
-            - 동반자 수: {companions}명 (총 {companions}명이 함께 여행)
-            
-            📝 답변 가이드라인:
-            1. 모든 추천은 위 설정에 맞춰서 제공할 것
-            2. 예산 범위 내에서 현실적인 옵션 제시
-            3. {duration}일 일정에 맞는 계획 수립
-            4. {companions}명이 함께 즐길 수 있는 활동 추천
-            5. {travel_type} 스타일에 맞는 여행지와 활동 우선 제안
-            
-            🏖️ 여름 휴가 시즌이니까 시원하고 재미있는 여행지를 추천하고,
-            실용적인 팁과 구체적인 정보를 제공해줘.
-            
-            응답할 때는 이모지를 적절히 사용하고, 구조화된 정보를 제공해줘.
-            사용자가 설정을 바꾸면 그에 맞춰서 답변을 조정해줘.
-            """
-        }
-    
-    # 빠른 질문 버튼들을 상단으로 이동
+# 메인 콘텐츠 영역 - 간격 조정
+col1, col2 = st.columns([3, 2])  # 비율을 3:2로 조정해서 빈 공간 줄임
+
+with col1:
+    # 빠른 질문 버튼들
     st.markdown("## 🚀 빠른 질문")
     
     quick_questions = [
-        f"🏖️ {travel_type} 스타일로 {duration}일 여행지 추천해줘",
-        f"✈️ {budget}만원 예산으로 항공료 절약 팁 알려줘",
-        f"🏨 {companions}명이 함께 머물 숙소 추천해줘",
-        f"🍽️ {travel_type}에 맞는 현지 맛집 추천해줘",
-        f"📱 {duration}일 여행에 필수 앱 알려줘",
-        f"💼 {companions}명 {duration}일 짐 싸기 체크리스트 만들어줘"
+        "🏖️ 여름 휴가지 추천해줘",
+        "✈️ 항공료 절약 팁 알려줘",
+        "🏨 숙소 예약 꿀팁이 뭐야?",
+        "🍽️ 현지 맛집 추천해줘",
+        "📱 여행 필수 앱 알려줘",
+        "💼 짐 싸기 체크리스트 만들어줘"
     ]
     
-    # 버튼을 3x2 그리드로 배치
-    cols = st.columns(3)
+    # 버튼을 2x3 그리드로 배치 (더 컴팩트하게)
+    cols = st.columns(2)
     for i, question in enumerate(quick_questions):
-        with cols[i % 3]:
+        with cols[i % 2]:
             if st.button(question, key=f"quick_{i}"):
                 st.session_state.quick_question = question
-    
-    st.markdown("---")
-    
-    # 🔥 사용자 입력창을 상단으로 이동 🔥
-    st.markdown("## 💬 여행 상담")
-    st.markdown("### 💭 질문하기")
-    
-    # 사용자 입력 (상단 배치)
-    if prompt := st.chat_input("여행에 대해 무엇이든 물어보세요! 현재 설정이 자동으로 적용됩니다 🗣️"):
-        # 시스템 메시지 업데이트
-        current_system = get_system_prompt()
-        
-        # 기존 메시지가 있으면 시스템 메시지 업데이트, 없으면 추가
-        if st.session_state.messages and st.session_state.messages[0]["role"] == "system":
-            st.session_state.messages[0] = current_system
-        else:
-            st.session_state.messages.insert(0, current_system)
-        
-        # 사용자 메시지 저장 및 표시
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        
-        # AI 응답 생성
-        with st.chat_message("assistant"):
-            with st.spinner("설정을 반영하여 답변을 생성하고 있습니다..."):
-                stream = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=st.session_state.messages,
-                    stream=True,
-                    temperature=0.7
-                )
-                response = st.write_stream(stream)
-        
-        st.session_state.messages.append({"role": "assistant", "content": response})
-    
-    # 빠른 질문 처리
-    if "quick_question" in st.session_state:
-        prompt = st.session_state.quick_question
-        del st.session_state.quick_question
-        
-        # 시스템 메시지 업데이트
-        current_system = get_system_prompt()
-        
-        if st.session_state.messages and st.session_state.messages[0]["role"] == "system":
-            st.session_state.messages[0] = current_system
-        else:
-            st.session_state.messages.insert(0, current_system)
-        
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        
-        # 빠른 질문 표시
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        
-        # AI 응답 생성
-        with st.chat_message("assistant"):
-            with st.spinner("설정을 반영하여 답변을 생성하고 있습니다..."):
-                stream = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=st.session_state.messages,
-                    stream=True,
-                    temperature=0.7
-                )
-                response = st.write_stream(stream)
-        
-        st.session_state.messages.append({"role": "assistant", "content": response})
-    
-    st.markdown("### 📜 대화 내역")
-    
-    # 이전 메시지 표시 (시스템 메시지 제외)
-    display_messages = [msg for msg in st.session_state.messages if msg["role"] != "system"]
-    for message in display_messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-# 메인 콘텐츠 영역 - 간격 조정
-col1, col2 = st.columns([3, 2])
-
-with col1:
-    # 여행 계획 요약 카드
-    st.markdown("## 📊 맞춤 여행 계획 요약")
-    st.markdown(f"""
-    <div class="info-card">
-        <h4>🎯 {travel_type} 여행</h4>
-        <p><strong>📅 기간:</strong> {duration}일</p>
-        <p><strong>👥 인원:</strong> {companions}명</p>
-        <p><strong>💰 예산:</strong> 총 {budget * companions}만원 (1인당 {budget}만원)</p>
-        <hr>
-        <h5>💡 맞춤 추천 포인트:</h5>
-        <ul>
-            <li>🎨 {travel_type} 테마에 맞는 여행지</li>
-            <li>💸 예산 {budget}만원 내 최적 옵션</li>
-            <li>👨‍👩‍👧‍👦 {companions}명이 함께 즐길 수 있는 활동</li>
-            <li>📅 {duration}일 완벽 일정 계획</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
 
 with col2:
     # 여행 진행 상황 표시 - 더 컴팩트하게
@@ -349,6 +191,87 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
+# OpenAI API Key 확인
+if not openai_api_key:
+    st.info("🔑 사이드바에서 OpenAI API Key를 입력해주세요.")
+else:
+    # OpenAI 클라이언트 생성
+    client = OpenAI(api_key=openai_api_key)
+    
+    # 세션 상태 초기화
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {
+                "role": "system",
+                "content": f"""
+                너는 전문적이고 친근한 여행 플래너 AI 어시스턴트야. 
+                
+                현재 사용자 설정:
+                - 여행 스타일: {travel_type}
+                - 예산: {budget}만원 (1인 기준)
+                - 여행 기간: {duration}일
+                - 동반자 수: {companions}명
+                
+                이 정보를 바탕으로 맞춤형 여행 계획을 제안해줘. 
+                여름 휴가 시즌이니까 시원하고 재미있는 여행지를 추천하고,
+                실용적인 팁과 구체적인 정보를 제공해줘.
+                
+                응답할 때는 이모지를 적절히 사용하고, 구조화된 정보를 제공해줘.
+                """
+            }
+        ]
+    
+    # 빠른 질문 처리
+    if "quick_question" in st.session_state:
+        prompt = st.session_state.quick_question
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        del st.session_state.quick_question
+        
+        # 빠른 질문 표시
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
+        # AI 응답 생성
+        with st.chat_message("assistant"):
+            with st.spinner("답변을 생성하고 있습니다..."):
+                stream = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=st.session_state.messages,
+                    stream=True,
+                    temperature=0.7
+                )
+                response = st.write_stream(stream)
+        
+        st.session_state.messages.append({"role": "assistant", "content": response})
+    
+    # 채팅 메시지 표시
+    st.markdown("## 💬 여행 상담")
+    
+    # 이전 메시지 표시 (시스템 메시지 제외)
+    for message in st.session_state.messages[1:]:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    
+    # 사용자 입력
+    if prompt := st.chat_input("여행에 대해 무엇이든 물어보세요! 🗣️"):
+        # 사용자 메시지 저장 및 표시
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
+        # AI 응답 생성
+        with st.chat_message("assistant"):
+            with st.spinner("답변을 생성하고 있습니다..."):
+                stream = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=st.session_state.messages,
+                    stream=True,
+                    temperature=0.7
+                )
+                response = st.write_stream(stream)
+        
+        st.session_state.messages.append({"role": "assistant", "content": response})
+
 # 하단 기능들 - 더 컴팩트하게
 st.markdown("---")
 
@@ -359,12 +282,12 @@ with col1:
     st.markdown("### 🗺️ 여행지 지도")
     if st.button("지도 보기"):
         # Google Maps 링크로 대체
-        st.markdown(f"""
+        st.markdown("""
         <div class="info-card">
-            <h4>🗺️ {travel_type} 추천 여행지 지도</h4>
+            <h4>🗺️ 추천 여행지 지도</h4>
             <p><a href="https://maps.google.com" target="_blank">🌍 Google Maps에서 보기</a></p>
             <p><a href="https://map.naver.com" target="_blank">🇰🇷 네이버 지도에서 보기</a></p>
-            <p><strong>인기 여행지 ({travel_type}):</strong></p>
+            <p><strong>인기 여행지:</strong></p>
             <ul>
                 <li>🏖️ 제주도 - 한국의 하와이</li>
                 <li>🏛️ 경주 - 천년의 역사</li>
@@ -393,7 +316,7 @@ with col2:
         with col_a:
             st.metric("올해 국내 여행객", "5,200만명", "12%")
         with col_b:
-            st.metric("평균 여행 예산", f"{budget}만원", "8%")
+            st.metric("평균 여행 예산", "180만원", "8%")
 
 with col3:
     st.markdown("### 💾 여행 계획 관리")
@@ -401,24 +324,15 @@ with col3:
     # 저장 기능
     if st.button("💾 대화 저장"):
         if len(st.session_state.messages) > 1:
-            chat_history = f"""
-=== 여행 설정 ===
-여행 스타일: {travel_type}
-예산: {budget}만원/인 (총 {budget * companions}만원)
-여행 기간: {duration}일
-동반자 수: {companions}명
-
-=== 대화 내용 ===
-"""
-            for msg in st.session_state.messages:
-                if msg["role"] != "system":
-                    role = "사용자" if msg["role"] == "user" else "AI"
-                    chat_history += f"**{role}**: {msg['content']}\n\n"
+            chat_history = ""
+            for msg in st.session_state.messages[1:]:  # 시스템 메시지 제외
+                role = "사용자" if msg["role"] == "user" else "AI"
+                chat_history += f"**{role}**: {msg['content']}\n\n"
             
             st.download_button(
                 label="📄 대화 내용 다운로드",
                 data=chat_history,
-                file_name=f"여행계획_{travel_type.split()[1]}_{duration}일_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                file_name=f"여행계획_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
                 mime="text/plain"
             )
         else:
@@ -426,14 +340,14 @@ with col3:
     
     # 초기화 기능
     if st.button("🔄 대화 초기화"):
-        st.session_state.messages = []
+        st.session_state.messages = st.session_state.messages[:1]  # 시스템 메시지만 유지
         st.rerun()
 
 # 푸터
 st.markdown("---")
-st.markdown(f"""
+st.markdown("""
 <div style="text-align: center; color: #666; padding: 20px;">
-    <p>🏖️ AI 여행 플래너 | {travel_type} {duration}일 여행을 위한 당신의 파트너 🌞</p>
-    <p><small>OpenAI API를 사용하여 구동됩니다. 모든 설정이 실시간으로 적용됩니다.</small></p>
+    <p>🏖️ AI 여행 플래너 | 완벽한 여름 휴가를 위한 당신의 파트너 🌞</p>
+    <p><small>OpenAI API를 사용하여 구동됩니다.</small></p>
 </div>
 """, unsafe_allow_html=True)
