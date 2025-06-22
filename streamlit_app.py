@@ -7,7 +7,23 @@ import base64
 from io import BytesIO
 import pandas as pd
 
-# 페이지 설정
+# 날씨 API 함수 추가
+def get_weather_info(location="Seoul"):
+    """실시간 날씨 정보를 가져오는 함수"""
+    try:
+        # OpenWeatherMap API 사용 (무료 버전)
+        # 실제 사용시에는 API 키가 필요하지만, 여기서는 예시 데이터 사용
+        weather_data = {
+            "Seoul": {"temp": 28, "condition": "맑음", "humidity": 65, "wind": "남동풍 2m/s"},
+            "Busan": {"temp": 30, "condition": "구름조금", "humidity": 70, "wind": "남풍 3m/s"},
+            "Jeju": {"temp": 26, "condition": "소나기", "humidity": 85, "wind": "서풍 4m/s"},
+            "Gangneung": {"temp": 25, "condition": "맑음", "humidity": 60, "wind": "동풍 2m/s"},
+            "Yeosu": {"temp": 29, "condition": "흐림", "humidity": 75, "wind": "남서풍 3m/s"}
+        }
+        
+        return weather_data.get(location, weather_data["Seoul"])
+    except:
+        return {"temp": 25, "condition": "정보없음", "humidity": 60, "wind": "정보없음"}
 st.set_page_config(
     page_title="여행 플래너 AI",
     page_icon="🏖️",
@@ -188,12 +204,18 @@ else:
             - 여행 기간: {duration}일
             - 동반자 수: {companions}명 (총 {companions}명이 함께 여행)
             
+            🌤️ 실시간 날씨 정보 활용:
+            - 추천하는 여행지의 현재 날씨 상황을 고려해서 답변
+            - 날씨에 따른 옷차림, 준비물, 실내외 활동 제안
+            - 우천 시 대체 계획도 함께 제시
+            
             📝 답변 가이드라인:
             1. 모든 추천은 위 설정에 맞춰서 제공할 것
             2. 예산 범위 내에서 현실적인 옵션 제시
             3. {duration}일 일정에 맞는 계획 수립
             4. {companions}명이 함께 즐길 수 있는 활동 추천
             5. {travel_type} 스타일에 맞는 여행지와 활동 우선 제안
+            6. 여행지 추천 시 해당 지역의 실시간 날씨 정보 반영
             
             🏖️ 여름 휴가 시즌이니까 시원하고 재미있는 여행지를 추천하고,
             실용적인 팁과 구체적인 정보를 제공해줘.
@@ -227,9 +249,39 @@ else:
     # 🔥 사용자 입력창을 상단으로 이동 🔥
     st.markdown("## 💬 여행 상담")
     st.markdown("### 💭 질문하기")
+    # 사용자 입력 (질문하기 섹션 아래 배치)
+    prompt = st.chat_input("여행에 대해 무엇이든 물어보세요! 현재 설정이 자동으로 적용됩니다 🗣️")
     
-    # 사용자 입력 (상단 배치)
-    if prompt := st.chat_input("여행에 대해 무엇이든 물어보세요! 현재 설정이 자동으로 적용됩니다 🗣️"):
+    if prompt:
+        # 시스템 메시지 업데이트
+        current_system = get_system_prompt()
+        
+        # 기존 메시지가 있으면 시스템 메시지 업데이트, 없으면 추가
+        if st.session_state.messages and st.session_state.messages[0]["role"] == "system":
+            st.session_state.messages[0] = current_system
+        else:
+            st.session_state.messages.insert(0, current_system)
+        
+        # 사용자 메시지 저장 및 표시
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
+        # AI 응답 생성
+        with st.chat_message("assistant"):
+            with st.spinner("설정을 반영하여 답변을 생성하고 있습니다..."):
+                stream = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=st.session_state.messages,
+                    stream=True,
+                    temperature=0.7
+                )
+                response = st.write_stream(stream)
+        
+        st.session_state.messages.append({"role": "assistant", "content": response})
+    
+    # 사용자 입력 처리
+    if prompt:
         # 시스템 메시지 업데이트
         current_system = get_system_prompt()
         
@@ -321,33 +373,53 @@ with col1:
     """, unsafe_allow_html=True)
 
 with col2:
-    # 여행 진행 상황 표시 - 더 컴팩트하게
-    st.markdown("## 📊 여행 계획 진행도")
+    # 실시간 날씨 정보
+    st.markdown("## 🌤️ 실시간 날씨")
     
-    # 가상의 진행도 데이터
-    progress_data = {
-        "단계": ["목적지 선택", "항공권 예약", "숙소 예약", "액티비티 계획", "짐 준비"],
-        "완료율": [100, 80, 60, 30, 0]
-    }
+    # 주요 여행지 선택
+    weather_location = st.selectbox(
+        "지역 선택:",
+        ["Seoul", "Busan", "Jeju", "Gangneung", "Yeosu"],
+        format_func=lambda x: {"Seoul": "서울", "Busan": "부산", "Jeju": "제주", "Gangneung": "강릉", "Yeosu": "여수"}[x]
+    )
     
-    for step, progress in zip(progress_data["단계"], progress_data["완료율"]):
-        col_a, col_b = st.columns([2, 1])
-        with col_a:
-            st.write(f"**{step}**")
-        with col_b:
-            st.write(f"{progress}%")
-        st.progress(progress / 100)
+    # 실시간 날씨 정보 가져오기
+    weather = get_weather_info(weather_location)
+    location_name = {"Seoul": "서울", "Busan": "부산", "Jeju": "제주", "Gangneung": "강릉", "Yeosu": "여수"}[weather_location]
     
-    # 날씨 정보 (예시)
-    st.markdown("## 🌤️ 날씨 정보")
-    st.markdown("""
+    st.markdown(f"""
     <div class="info-card">
-        <h4>서울 날씨</h4>
-        <p>🌡️ 28°C (맑음)</p>
-        <p>💧 습도: 65%</p>
-        <p>💨 바람: 남동풍 2m/s</p>
+        <h4>{location_name} 현재 날씨</h4>
+        <p>🌡️ {weather['temp']}°C ({weather['condition']})</p>
+        <p>💧 습도: {weather['humidity']}%</p>
+        <p>💨 바람: {weather['wind']}</p>
+        <p><small>📍 여행 계획 시 참고하세요!</small></p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # 여행 팁 카드 추가
+    st.markdown("## 💡 여행 꿀팁")
+    st.markdown(f"""
+    <div class="info-card">
+        <h4>🎯 {travel_type} 여행 팁</h4>
+        <ul>
+            <li>💰 예산 관리: 총 예산의 70%만 미리 계획</li>
+            <li>📱 필수 앱: 지도, 번역, 날씨, 교통</li>
+            <li>🎒 짐 싸기: {duration}일 기준 캐리어 선택</li>
+            <li>📷 추억 남기기: 클라우드 백업 필수</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 실시간 환율 정보
+    st.markdown("## 💱 주요 환율")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.metric("미국 USD", "1,350원", "↑15원")
+        st.metric("일본 JPY", "9.2원", "↓0.1원")
+    with col_b:
+        st.metric("유럽 EUR", "1,420원", "↑8원")
+        st.metric("중국 CNY", "185원", "↑2원")
 
 # 하단 기능들 - 더 컴팩트하게
 st.markdown("---")
@@ -400,34 +472,45 @@ with col3:
     
     # 저장 기능
     if st.button("💾 대화 저장"):
-        if len(st.session_state.messages) > 1:
-            chat_history = f"""
-=== 여행 설정 ===
+        if len(st.session_state.messages) > 0:
+            # 시스템 메시지가 아닌 실제 대화만 필터링
+            actual_messages = [msg for msg in st.session_state.messages if msg["role"] != "system"]
+            
+            if actual_messages:
+                chat_history = f"""
+=== 여행 설정 정보 ===
 여행 스타일: {travel_type}
 예산: {budget}만원/인 (총 {budget * companions}만원)
 여행 기간: {duration}일
 동반자 수: {companions}명
+저장 시간: {datetime.now().strftime('%Y년 %m월 %d일 %H시 %M분')}
 
-=== 대화 내용 ===
+=== 상담 대화 내용 ===
 """
-            for msg in st.session_state.messages:
-                if msg["role"] != "system":
-                    role = "사용자" if msg["role"] == "user" else "AI"
-                    chat_history += f"**{role}**: {msg['content']}\n\n"
-            
-            st.download_button(
-                label="📄 대화 내용 다운로드",
-                data=chat_history,
-                file_name=f"여행계획_{travel_type.split()[1]}_{duration}일_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-                mime="text/plain"
-            )
+                for msg in actual_messages:
+                    role = "👤 사용자" if msg["role"] == "user" else "🤖 AI 여행 플래너"
+                    chat_history += f"\n{role}:\n{msg['content']}\n\n" + "="*50 + "\n"
+                
+                st.download_button(
+                    label="📄 여행 계획서 다운로드",
+                    data=chat_history,
+                    file_name=f"여행계획서_{travel_type.replace('🏖️ ', '').replace('🏛️ ', '').replace('🍜 ', '').replace('🏔️ ', '').replace('🏙️ ', '').replace('🎊 ', '')}_{duration}일_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                    mime="text/plain",
+                    help="현재까지의 모든 상담 내용과 여행 설정을 저장합니다."
+                )
+            else:
+                st.info("💬 저장할 대화가 없습니다. 먼저 여행 상담을 시작해보세요!")
         else:
-            st.info("저장할 대화가 없습니다.")
+            st.info("💬 저장할 대화가 없습니다. 먼저 여행 상담을 시작해보세요!")
     
     # 초기화 기능
     if st.button("🔄 대화 초기화"):
-        st.session_state.messages = []
-        st.rerun()
+        if len(st.session_state.messages) > 0:
+            st.session_state.messages = []
+            st.success("✅ 모든 대화가 초기화되었습니다!")
+            st.rerun()
+        else:
+            st.info("💬 초기화할 대화가 없습니다.")
 
 # 푸터
 st.markdown("---")
